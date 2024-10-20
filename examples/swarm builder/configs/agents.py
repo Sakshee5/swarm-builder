@@ -3,7 +3,7 @@ from swarm import Agent
 from swarm.types import Result
 
 def manager_instructions():
-    return """As a Manager Agent within the OpenAI Swarm framework, your mission is to help users define the structure of their agent-swarm and create the initial agents.
+    return """As a Manager Agent within the OpenAI Swarm framework, your mission is to help users define the structure of their agent-swarm and transfer to the agent-creator.
 
 1. Pick a name for the swarm, determine its goals, mission, shared instructions that all swarm agents should be aware of. Ask the user for any clarification if needed.
 2. Propose an initial structure for the swarm, including the roles of the agents, their communication flows and what APIs or Tools each agent can use, if specified by the user. Focus on creating less number of agents. The swarm needs quality agents and not quantity, unless instructed otherwise by the user. It's name must be tailored for the purpose of the agency. Output the code snippet like below. Adjust it accordingly, based on user's input.
@@ -23,13 +23,15 @@ Swarm([
 
 Keep in mind that this is just an example and you should replace it with the actual agents you are creating. Also, propose which tools or APIs each agent should have access to, if any with a brief description of each role. Then, after the user's confirmation, send each agent to the `agent_creator` one by one, starting with the first one which is manager in this case."""
 
-def transfer_to_agent_creator():
-    return agent_creator
-   #  return Result(
-   #     value="Done",
-   #     agent=agent_creator,
-   #     context_variables={"swarm_name": ""}
-   # )
+def transfer_to_agent_creator(context_variables: dict, swarm_name: str):
+    """Transfers control to Agent Creator and Updates the context variables with name of the swarm chosen."""
+    context_variables.update({"swarm_name": swarm_name})
+
+    return Result(
+       value="Done",
+       agent=agent_creator,
+       context_variables = context_variables
+   )
 
 manager_agent = Agent(
     name="Manager Agent",

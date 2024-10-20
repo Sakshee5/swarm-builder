@@ -1,20 +1,23 @@
 import os
+from swarm import Agent
 
 main_py_code = """from configs.agents import *
 from swarm.repl import run_demo_loop
 
-context_variables = {}
+context_variables = {context_variables}
 
 if __name__ == "__main__":
-    run_demo_loop(triage_agent, context_variables=context_variables, debug=True)"""
+    run_demo_loop({starting_agent}, context_variables={context_variables}, stream=True, debug=True)"""
 
 # MANAGER TOOLS
 # Function to create the agency structure
-def create_swarm_structure(swarm_name: str) -> str:
+def create_swarm_structure(context_variables: dict, starting_agent: Agent) -> str:
     """
     This function creates the necessary directories and files for the specified swarm, including
     `configs` and `data` folders. It also generates the `main.py` file and other initialization files.
     """
+    swarm_name = context_variables.get('swarm_name')
+
     os.makedirs(f'examples/{swarm_name}/configs', exist_ok=True)
     os.makedirs(f'examples/{swarm_name}/data', exist_ok=True)
     
@@ -26,7 +29,10 @@ def create_swarm_structure(swarm_name: str) -> str:
         f.write('# Init file for data\n')
 
     with open(f'examples/{swarm_name}/main.py', 'w') as f:
-        f.write(main_py_code)
+        f.write(main_py_code.format(
+            context_variables=context_variables,
+            starting_agent=starting_agent,
+            ))
 
     with open(f'examples/{swarm_name}/data/prompts.py', 'w') as f:
         f.write("")
@@ -35,11 +41,12 @@ def create_swarm_structure(swarm_name: str) -> str:
 
 
 
-def update_goals(swarm_name: str, goals: str) -> str:
+def update_goals(context_variables: dict, goals: str) -> str:
     """
     This function writes the specified goals and mission statement to the `goals.md` file located
     in the `data` directory of the swarm.
     """
+    swarm_name = context_variables.get("swarm_name")
     with open(f'examples/{swarm_name}/data/goals.md', 'w') as f:
         f.write(goals)
 
@@ -72,7 +79,7 @@ def transfer_to_{transfer_agent}():
 """
 
 def create_agent_template(
-    swarm_name: str, 
+    context_variables: dict, 
     agent_name: str, 
     instructions: str, 
     transfer_agents: list[str] = [], 
@@ -82,22 +89,20 @@ def create_agent_template(
     This function constructs the code for an agent, including instructions, transfer functions,
     and any additional specified functions. It writes the generated code to `agents.py`.
     """
+    swarm_name = context_variables.get('swarm_name')
     transfer_functions = "\n".join([create_transfer_function(agent) for agent in transfer_agents])
     
     # List of transfer functions and additional functions/tools
     all_functions = [f"transfer_to_{agent}" for agent in transfer_agents]
     if additional_functions:
         all_functions.extend(additional_functions)
-        
-    # Join functions for the template
-    functions_str = ", ".join(all_functions)
 
     # Format the agent code using the template
     agent_code = agent_template.format(
         agent_name=agent_name,
         instructions=instructions,
         transfer_functions=transfer_functions,
-        functions=functions_str
+        functions=all_functions
     )
     agents_file_path = os.path.join(f'examples/{swarm_name}/configs', 'agents.py')
     
@@ -123,7 +128,7 @@ tool_template = """def {tool_name}():
 """
 
 
-def create_tool(swarm_name: str, tool_name: str, tool_description: str, tool_code: str) -> str:
+def create_tool(context_variables: dict, tool_name: str, tool_description: str, tool_code: str) -> str:
     """
     Generates a new tool based on the provided parameters and writes it to the tools.py file.
     """
@@ -134,6 +139,7 @@ def create_tool(swarm_name: str, tool_name: str, tool_description: str, tool_cod
         tool_code=tool_code
     )
 
+    swarm_name = context_variables.get("swarm_name")
     # Define the path to the tools file
     path = f'examples/{swarm_name}/configs/'
     os.makedirs(path, exist_ok=True)  # Ensure the directory exists
