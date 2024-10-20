@@ -2,31 +2,36 @@ from configs.tools import *
 from swarm import Agent
 from swarm.types import Result
 
-def manager_instructions():
-    return """As a Manager Agent within the OpenAI Swarm framework, your mission is to help users define the structure of their agent-swarm and transfer to the agent-creator.
+def manager_instructions(context_variables):
+   user_name = context_variables.get("user_name") 
 
-1. Pick a name for the swarm, determine its goals, mission, shared instructions that all swarm agents should be aware of. Ask the user for any clarification if needed.
-2. Propose an initial structure for the swarm, including the roles of the agents, their communication flows and what APIs or Tools each agent can use, if specified by the user. Focus on creating less number of agents. The swarm needs quality agents and not quantity, unless instructed otherwise by the user. It's name must be tailored for the purpose of the agency. Output the code snippet like below. Adjust it accordingly, based on user's input.
-3. Upon confirmation of the swarm structure, use `create_swarm_structure` tool to create a folder structure for the swarm.
-4. Next, use `update_goals` tool to set the goals/mission/shared instructions for the swarm.
-5. Then transfer to `agent_creator` for it create these agents one by one.
+   return f"""As a Manager Agent within the OpenAI Swarm framework, your mission is to help users define the simplest and most effective structure of their agent-swarm based on their specific requirements. The user you are addressing is: {user_name}
 
-### Example of Transfers / Handoffs
-Here is an example of how communication flows are defined in the swarm. Essentially, agents that are inside a double array can transfer from first agent to the second. Agent that is at the top level is the entry point.
+1. Understand the user's intent and determine the simplest swarm structure that meets their goals directly. Avoid adding unnecessary agents unless they provide a clear benefit or optimization.
+2. Propose the initial swarm name, structure, agent names, and roles. The agent names must be tailored for the purpose of the agency. Make sure to confirm this information with the user before proceeding. The structure should include:
+    - The name of the swarm.
+    - All agents with clear and concise roles.
+    - Any essential tools/APIs each agent will require.
 
-Swarm([
-    manager          # manager is the entry point for communication with the user
-    [manager, dev],  # manager can transfer to Developer
-    [manager, va],   # manager can transfer to Virtual Assistant
+You should structure it in the following way:
+swarm_structure = [
+    manager          # manager (sample agent) is the entry point for communication with the user. This is the starting agent.
+    [manager, dev],  # manager can transfer to Developer (sample agent)
+    [manager, va],   # manager can transfer to Virtual Assistant (sample agent)
+    [va, manager],   # Virtual Assistant can transfer back to the manager
     [dev, va]        # Developer can transfer to Virtual Assistant
-])
+]
 
-Keep in mind that this is just an example and you should replace it with the actual agents you are creating. Also, propose which tools or APIs each agent should have access to, if any with a brief description of each role. Then, after the user's confirmation, send each agent to the `agent_creator` one by one, starting with the first one which is manager in this case."""
+Keep in mind that this is just an example and you should replace it with the actual agents you are creating. Also, propose which tools or APIs each agent should have access to, if any with a brief description of each role. Then, after the user's confirmation, send each agent to the `agent_creator` one by one, starting with the first one which is manager in this case.
 
-def transfer_to_agent_creator(context_variables: dict, swarm_name: str):
+4. Use `update_context_variables` to update the swarm_name and swarm_structure.
+5. Use `create_swarm_structure` to create a folder structure for the swarm.
+6. Use `update_goals` to set the swarm's goals/mission/shared instructions.
+7. Transfer control to `agent_creator` to create these agents one by one based on the confirmed structure."""
+
+def transfer_to_agent_creator(context_variables: dict):
     """Transfers control to Agent Creator and Updates the context variables with name of the swarm chosen."""
-    context_variables.update({"swarm_name": swarm_name})
-
+    
     return Result(
        value="Done",
        agent=agent_creator,
@@ -35,43 +40,100 @@ def transfer_to_agent_creator(context_variables: dict, swarm_name: str):
 
 manager_agent = Agent(
     name="Manager Agent",
-    instructions=manager_instructions(),
-    functions=[create_swarm_structure, update_goals, transfer_to_agent_creator],
+    instructions=manager_instructions,
+    functions=[create_swarm_structure, update_context_variables_manager, update_goals, transfer_to_agent_creator],
 )
 
 
-def agent_creator_instructions():
-    return """You are an agent that creates other agents as instructed. Below are your instructions that needs to be followed for each agent communicated.
+def agent_creator_instructions(context_variables):
+    swarm_structure = context_variables.get("swarm_structure")
+
+    agent_tools = """[ 
+        { 
+            "agent_name": "agent_name_1", 
+            "tools": ["tool1", "tool2"], 
+            "tool_descriptions": 
+            { 
+                "tool1": "Description for tool1", 
+                "tool2": "Description for tool2",
+                ...
+            },
+            "agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
+        }, 
+        { 
+            "agent_name": "agent_name_1", 
+            "tools": ["tool1", "tool2"], 
+            "tool_descriptions": 
+            { 
+                "tool1": "Description for tool1", 
+                "tool2": "Description for tool2",
+                ...
+            } ,
+            "agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
+        },
+        ....
+    ]"""
+
+    instructions =  """You are an agent responsible for creating other agents based on the provided swarm structure. Follow these instructions to create each agent and define the tools they will need.
+
+### Swarm Structure:
+{swarm_structure}
 
 ## Primary Instructions:
 
-1. Create a new agent using `create_agent_template` tool.
-2. Transfer to the `tool_creator` agent to create tools or APIs for this agent. Make sure to also communicate the agent description, name and a summary of the processes that it needs to perform. 
-3. Once the `tool_creator` transfers the conversation back, move on to create the second agent in a simialr manner. If there are no issues and all agents and tools have been successfully created, notify the user that the swarm has been created.."""
+1. **Analyze Each Agent's Role**:
+   - Review the role of each agent based on the swarm structure and the user’s goals. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose.
 
-def transfer_to_tool_creator():
-    return tool_creator
+2. **Define the Tools and Descriptions**:
+   - Based on your analysis, come up with a structure that defines the tools and APIs required for each agent in the format below:
+   
+{agent_tools}
+
+- Make sure each tool or API aligns with the agents role and its functions within the swarm.
+
+3. Use the `update_context_variables_agentcreator` to update the `context_variables`.
+
+4. Use the `create_agents` tool to generate the agents based on the `agent_and_tools` structure.
+
+6. Once the agents are created, transfer control to the `tool_creator` agent for it to create all the required tools.
+"""
+
+    return instructions.format(
+        swarm_structure = swarm_structure,
+        agents_tool = agent_tools
+        )
+
+def transfer_to_tool_creator(context_variables: dict):
+    return Result(
+       value="Done",
+       agent=tool_creator,
+       context_variables = context_variables
+   )
 
 agent_creator = Agent(
     name="Agent Creator Agent",
-    instructions=agent_creator_instructions(),
-    functions=[create_agent_template, transfer_to_tool_creator],
+    instructions=agent_creator_instructions,
+    functions=[update_context_variables_agentcreator, create_agents, transfer_to_tool_creator],
 )
 
-def tool_creator_instructions():
-    return """As a ToolCreator Agent within the Swarm framework, your mission is to develop tools that enhance the capabilities of other agents. These tools are pivotal for enabling agents to communicate, collaborate, and efficiently achieve their collective objectives. Below are detailed instructions to guide you through the process of creating tools, ensuring they are both functional and align with the framework's standards.
+def tool_creator_instructions(context_variables):
+    agent_tools = context_variables.get("agent_tools")
 
-Here are your primary instructions:
+    return f"""As a Tool Creator Agent within the Swarm framework, your role is to create tools for each agent as defined in the agent_tools structure.
 
-1. Determine which tools the agent must utilize to perform its role. Make an educated guess if the user has not specified any tools or APIs. Remember, all tools must utilize actual APIs or SDKs, and not hypothetical examples.
-2. Create these tools one at a time, using `create_tool` tool.
-3. If a single tool is to be created for a particular agent, transfer back to "agent_creator". If multiple tools are to be created, create all of them sequentially and then transfer back to "agent_creator"."""
+Here is the agent_tools structure:
+{agent_tools}
 
-def transfer_to_agent_creator():
-    return agent_creator
+## Instructions:
+
+1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
+2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools. Ensure you accurately implement real-world APIs or SDKs when creating the tools.
+3. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
+4. Once all tools for all agents have been created, update the user that the swarm has been created.
+"""
 
 tool_creator = Agent(
     name="Tool Creator Agent",
-    instructions=tool_creator_instructions(),
-    functions=[create_tool, transfer_to_agent_creator],
+    instructions=tool_creator_instructions,
+    functions=[create_tool],
 )
