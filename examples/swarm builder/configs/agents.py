@@ -61,7 +61,7 @@ def agent_creator_instructions(context_variables):
 { 
 "tools": ["tool1", "tool2"], 
 "tool_descriptions": [Description for tool1", "Description for tool2", ...],
-"agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
+"agent_instructions ": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
 },
 ....
 }"""

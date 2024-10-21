@@ -104,7 +104,7 @@ JsonType = Dict[str, AgentType]
 
 def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Any):
     try:
-        context_variables = json.loads(agent_tools)
+        _ = json.loads(agent_tools)
 
         context_variables.update(
         { 
