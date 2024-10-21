@@ -15,16 +15,18 @@ def manager_instructions(context_variables):
 
 You should structure it in the following way:
 swarm_structure = [
-    manager          # manager (sample agent) is the entry point for communication with the user. This is the starting agent.
+    manager          # manager is the entry point for communication with user. This is the starting agent.
     [manager, dev],  # manager can transfer to Developer (sample agent)
     [manager, va],   # manager can transfer to Virtual Assistant (sample agent)
     [va, manager],   # Virtual Assistant can transfer back to the manager
     [dev, va]        # Developer can transfer to Virtual Assistant
 ]
 
+First entry should always be a single agent which will act as the starting agent. It should not be in a list.
+
 Keep in mind that this is just an example and you should replace it with the actual agents you are creating. Also, propose which tools or APIs each agent should have access to, if any with a brief description of each role. Then, after the user's confirmation, send each agent to the `agent_creator` one by one, starting with the first one which is manager in this case.
 
-4. Use `update_context_variables` to update the swarm_name and swarm_structure.
+4. Use `update_context_variables_manager` to update the swarm_name and swarm_structure.
 5. Use `create_swarm_structure` to create a folder structure for the swarm.
 6. Use `update_goals` to set the swarm's goals/mission/shared instructions.
 7. Transfer control to `agent_creator` to create these agents one by one based on the confirmed structure."""
@@ -82,7 +84,7 @@ def agent_creator_instructions(context_variables):
 ## Primary Instructions:
 
 1. **Analyze Each Agent's Role**:
-   - Review the role of each agent based on the swarm structure and the user’s goals. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose.
+   - Review the role of each agent based on the swarm structure and the users goals. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose.
 
 2. **Define the Tools and Descriptions**:
    - Based on your analysis, come up with a structure that defines the tools and APIs required for each agent in the format below:
@@ -100,7 +102,7 @@ def agent_creator_instructions(context_variables):
 
     return instructions.format(
         swarm_structure = swarm_structure,
-        agents_tool = agent_tools
+        agent_tools = agent_tools
         )
 
 def transfer_to_tool_creator(context_variables: dict):

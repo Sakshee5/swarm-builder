@@ -7,7 +7,7 @@ from swarm.repl import run_demo_loop
 context_variables = {context_variables}
 
 if __name__ == "__main__":
-    run_demo_loop({starting_agent}, context_variables={context_variables}, stream=True, debug=True)"""
+    run_demo_loop({starting_agent}, context_variables=context_variables, stream=True, debug=True)"""
 
 # MANAGER TOOLS
 # Function to create the agency structure
@@ -16,7 +16,10 @@ def create_swarm_structure(context_variables: dict, starting_agent: Agent) -> st
     This function creates the necessary directories and files for the specified swarm, including
     `configs` and `data` folders. It also generates the `main.py` file and other initialization files.
     """
-    swarm_name = context_variables.get("swarm_name")
+    try:
+        swarm_name = context_variables.get("swarm_name")
+    except Exception as e:
+        return "Please `update_context_variables_manager` before trying to `update_goals`"
 
     os.makedirs(f'examples/{swarm_name}/configs', exist_ok=True)
     os.makedirs(f'examples/{swarm_name}/data', exist_ok=True)
@@ -46,9 +49,16 @@ def update_goals(context_variables: dict, goals: str) -> str:
     This function writes the specified goals and mission statement to the `goals.md` file located
     in the `data` directory of the swarm.
     """
-    swarm_name = context_variables.get("swarm_name")
-    with open(f'examples/{swarm_name}/data/goals.md', 'w') as f:
-        f.write(goals)
+    try:
+        swarm_name = context_variables.get("swarm_name")
+    except Exception as e:
+        return "Please `update_context_variables_manager` before trying to `update_goals`"
+    
+    try:
+        with open(f'examples/{swarm_name}/data/goals.md', 'w') as f:
+            f.write(goals)
+    except Exception as e:
+        return "Please `create_swarm_structure` before setting goals."
 
     return "Goals and Mission for the swarm has been updated."
 
@@ -105,7 +115,7 @@ def create_agents(context_variables: dict) -> str:
     """
     swarm_name = context_variables.get('swarm_name')
     swarm_structure = context_variables.get('swarm_structure')
-    agent_tools = context_variables.get('agent_tools')
+    agent_tools = context_variables.get('tools')
 
     # Initialize the path for the agents.py file
     agents_file_path = os.path.join(f'examples/{swarm_name}/configs', 'agents.py')
