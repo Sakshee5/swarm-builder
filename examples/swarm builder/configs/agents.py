@@ -13,7 +13,7 @@ def manager_instructions(context_variables):
     - All agents with clear and concise roles.
     - Any essential tools/APIs each agent will require.
 
-You should structure it in the following way:
+You should structure it as a python list of string/lists and shown below:
 swarm_structure = [
     manager          # manager is the entry point for communication with user. This is the starting agent.
     [manager, dev],  # manager can transfer to Developer (sample agent)
@@ -50,31 +50,21 @@ manager_agent = Agent(
 def agent_creator_instructions(context_variables):
     swarm_structure = context_variables.get("swarm_structure")
 
-    agent_tools = """[ 
-        { 
-            "agent_name": "agent_name_1", 
-            "tools": ["tool1", "tool2"], 
-            "tool_descriptions": 
-            { 
-                "tool1": "Description for tool1", 
-                "tool2": "Description for tool2",
-                ...
-            },
-            "agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
-        }, 
-        { 
-            "agent_name": "agent_name_1", 
-            "tools": ["tool1", "tool2"], 
-            "tool_descriptions": 
-            { 
-                "tool1": "Description for tool1", 
-                "tool2": "Description for tool2",
-                ...
-            } ,
-            "agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
-        },
-        ....
-    ]"""
+    agent_tools = """{
+"agent_name_1":
+{
+"tools": ["tool1", "tool2"], 
+"tool_descriptions": ["Description for tool1", "Description for tool2"],
+"agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
+}, 
+"agent_name_2":
+{ 
+"tools": ["tool1", "tool2"], 
+"tool_descriptions": [Description for tool1", "Description for tool2", ...],
+"agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
+},
+....
+}"""
 
     instructions =  """You are an agent responsible for creating other agents based on the provided swarm structure. Follow these instructions to create each agent and define the tools they will need.
 
@@ -87,7 +77,7 @@ def agent_creator_instructions(context_variables):
    - Review the role of each agent based on the swarm structure and the users goals. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose.
 
 2. **Define the Tools and Descriptions**:
-   - Based on your analysis, come up with a structure that defines the tools and APIs required for each agent in the format below:
+   - Based on your analysis, come up with a structure that defines the tools and APIs required for each agent in the JSON format below:
    
 {agent_tools}
 
@@ -129,9 +119,10 @@ Here is the agent_tools structure:
 ## Instructions:
 
 1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
-2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools. Ensure you accurately implement real-world APIs or SDKs when creating the tools.
-3. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
-4. Once all tools for all agents have been created, update the user that the swarm has been created.
+2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools. 
+3. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Ensure all the necessary imports are made.
+4. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
+5. Once all tools for all agents have been created, update the user that the swarm has been created.
 """
 
 tool_creator = Agent(

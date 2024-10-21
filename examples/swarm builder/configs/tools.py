@@ -1,5 +1,7 @@
 import os
+import json
 from swarm import Agent
+from typing import List, Dict, Union, Any
 
 main_py_code = """from configs.agents import *
 from swarm.repl import run_demo_loop
@@ -11,7 +13,7 @@ if __name__ == "__main__":
 
 # MANAGER TOOLS
 # Function to create the agency structure
-def create_swarm_structure(context_variables: dict, starting_agent: Agent) -> str:
+def create_swarm_structure(context_variables: Dict, starting_agent: Agent) -> str:
     """
     This function creates the necessary directories and files for the specified swarm, including
     `configs` and `data` folders. It also generates the `main.py` file and other initialization files.
@@ -44,7 +46,7 @@ def create_swarm_structure(context_variables: dict, starting_agent: Agent) -> st
 
 
 
-def update_goals(context_variables: dict, goals: str) -> str:
+def update_goals(context_variables: Dict, goals: str) -> str:
     """
     This function writes the specified goals and mission statement to the `goals.md` file located
     in the `data` directory of the swarm.
@@ -63,20 +65,23 @@ def update_goals(context_variables: dict, goals: str) -> str:
     return "Goals and Mission for the swarm has been updated."
 
 
-def update_context_variables_manager(context_variables: dict, swarm_name: str, swarm_structure: list[str, list]):
+def update_context_variables_manager(context_variables: Dict, swarm_name: str, swarm_structure: List[Union[str, List]]):
     context_variables.update(
         {
             "swarm_name": swarm_name,
             "swarm_structure": swarm_structure
         }
     )
+    print('Context Variables:\n', context_variables)
 
     return "Swarm Name and Structure have been successfully updated."
 
 
 # AGENT CREATOR TOOLS
-agent_template = """from configs.tools import *
-from swarm import Agent
+agent_imports = """from configs.tools import *
+from swarm import Agent"""
+
+agent_template = """{agent_imports}
 
 def {agent_name}_instructions():
     return \"\"\"{instructions}\"\"\"
@@ -90,14 +95,29 @@ def {agent_name}_instructions():
 )
 """
 
-def update_context_variables_agentcreator(context_variables: dict, agent_tools: str):
-    context_variables.update(
-        {
+AgentType = Dict[str, Union[
+    List[str],  # List of tools or tool descriptions
+    str         # Agent instructions
+]]
+
+JsonType = Dict[str, AgentType]
+
+def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Any):
+    try:
+        context_variables = json.loads(agent_tools)
+
+        context_variables.update(
+        { 
             "agent_tools": agent_tools
         }
     )
 
-    return "context variables have been successfully updated with agent_tools."
+        print('Context Variables:\n', context_variables)
+        return "Context variables have been successfully updated with agent_tools."
+
+    except:
+        return "agent_tools should be a valid JSON."
+
 
 def create_transfer_function(transfer_agent):
     """
@@ -108,14 +128,14 @@ def transfer_to_{transfer_agent}():
     return {transfer_agent}
 """
 
-def create_agents(context_variables: dict) -> str:
+def create_agents(context_variables: Dict) -> str:
     """
     This function constructs the code for all agents, including instructions, transfer functions,
     and any additional specified functions. It writes the generated code to `agents.py`.
     """
     swarm_name = context_variables.get('swarm_name')
-    swarm_structure = context_variables.get('swarm_structure')
-    agent_tools = context_variables.get('tools')
+    swarm_structure = list(context_variables.get('swarm_structure'))
+    agent_tools = json.loads(context_variables.get('agent_tools'))
 
     # Initialize the path for the agents.py file
     agents_file_path = os.path.join(f'examples/{swarm_name}/configs', 'agents.py')
@@ -125,9 +145,8 @@ def create_agents(context_variables: dict) -> str:
         f.write("# Agents configuration file\n\n")
 
     # Loop through each agent in the swarm structure
-    for agent_info in agent_tools:
-        agent_name = agent_info['agent_name']
-        tools = agent_info['tools']
+    for i, (agent_name, agent_info) in enumerate(agent_tools.items()):
+        tools = list(agent_info['tools'])
         agent_instructions = agent_info['agent_instructions']
 
         # Find transfer agents based on the swarm structure
@@ -140,19 +159,29 @@ def create_agents(context_variables: dict) -> str:
         transfer_functions = "\n".join([create_transfer_function(agent) for agent in transfer_agents])
         
         # List of transfer functions and additional functions/tools
-        transfer_functions = [f"transfer_to_{agent}" for agent in transfer_agents]
-        tools.extend(transfer_functions)
-        
+        all_functions = [f"transfer_to_{agent}" for agent in transfer_agents]
+        all_functions.extend(tools)
+
         # Join functions for the template
-        functions_str = ", ".join(tools)
+        functions_str = ", ".join(all_functions)
 
         # Format the agent code using the template
-        agent_code = agent_template.format(
-            agent_name=agent_name,
-            instructions=agent_instructions,
-            transfer_functions=transfer_functions,
-            functions=functions_str
-        )
+        if i==0:
+            agent_code = agent_template.format(
+                agent_imports=agent_imports,
+                agent_name=agent_name,
+                instructions=agent_instructions,
+                transfer_functions=transfer_functions,
+                functions=functions_str
+            )
+        else:
+                agent_code = agent_template.format(
+                agent_imports="",
+                agent_name=agent_name,
+                instructions=agent_instructions,
+                transfer_functions=transfer_functions,
+                functions=functions_str
+            )
         
         # Write the agent code to the agents.py file
         with open(agents_file_path, "a") as f:
@@ -171,17 +200,17 @@ tool_template = """def {tool_name}():
     {tool_code}
 """
 
-def create_tool(context_variables: dict, tool_name: str, tool_code: str) -> str:
+def create_tool(context_variables: Dict, tool_name: str, tool_code: str) -> str:
     """
     Generates a new tool based on the provided parameters and writes it to the tools.py file.
     """
     swarm_name = context_variables.get("swarm_name")
-    agent_tools = context_variables.get("agent_tools")
+    agent_tools = json.loads(context_variables.get('agent_tools'))
 
     tool_description = None
 
     # Find the tool description based on the tool_name
-    for agent_info in agent_tools:
+    for agent_name, agent_info in agent_tools.items():
         if tool_name in agent_info['tools']:
             idx = agent_info['tools'].index(tool_name)
             tool_description = agent_info['tool_descriptions'][idx]
@@ -207,4 +236,4 @@ def create_tool(context_variables: dict, tool_name: str, tool_code: str) -> str:
     with open(tools_file_path, mode) as f:
         f.write("\n\n" + tool_code_str)
 
-    return f"{tool_name} has been successfully created."
+    return f"{tool_name} for {agent_name} has been successfully created."
