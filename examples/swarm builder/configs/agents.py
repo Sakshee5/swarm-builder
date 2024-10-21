@@ -120,7 +120,7 @@ Here is the agent_tools structure:
 
 1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
 2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools. 
-3. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Ensure all the necessary imports are made.
+3. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Ensure all the necessary imports are made. Ensure that each tool is python function with a detailed docstring which will act as the tool decsription.
 4. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
 5. Once all tools for all agents have been created, update the user that the swarm has been created.
 """

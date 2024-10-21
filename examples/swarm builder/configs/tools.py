@@ -39,9 +39,6 @@ def create_swarm_structure(context_variables: Dict, starting_agent: Agent) -> st
             starting_agent=starting_agent,
             ))
 
-    with open(f'examples/{swarm_name}/data/prompts.py', 'w') as f:
-        f.write("")
-
     return "Swarm Structure has been successfully created."
 
 
@@ -193,16 +190,23 @@ def create_agents(context_variables: Dict) -> str:
 
 # TOOL CREATOR TOOLS
 # Template for creating new tools
-tool_template = """def {tool_name}():
+tool_template = """{imports}
+
+def {tool_name}():
     \"\"\"
     {tool_description}
     \"\"\"
     {tool_code}
 """
 
-def create_tool(context_variables: Dict, tool_name: str, tool_code: str) -> str:
+def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_imports: str) -> str:
     """
     Generates a new tool based on the provided parameters and writes it to the tools.py file.
+
+    Args:
+    tool_name (str): The name of the tool to be created.
+    tool_code (str): Python class implementation of the tool to be added to the 'tools.py' file.
+    tool_imports (str): The necessary import statements for the tool.
     """
     swarm_name = context_variables.get("swarm_name")
     agent_tools = json.loads(context_variables.get('agent_tools'))
@@ -226,6 +230,7 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str) -> str:
 
     # Format the tool code using the template
     tool_code_str = tool_template.format(
+        imports=tool_imports,
         tool_name=tool_name,
         tool_description=tool_description,
         tool_code=tool_code

@@ -1,1 +1,0 @@
-The primary goal of the WeatherWatchers swarm is to provide real-time weather information for different cities in the US. This involves coordinating with a CityWeather agent to fetch weather data and delivering it to the user efficiently.
