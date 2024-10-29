@@ -2,6 +2,10 @@ import os
 import json
 from swarm import Agent
 from typing import List, Dict, Union, Any
+import ast
+import requests
+import requests
+from bs4 import BeautifulSoup
 
 main_py_code = """from configs.agents import *
 from swarm.repl import run_demo_loop
@@ -208,6 +212,26 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     tool_code (str): Python class implementation of the tool to be added to the 'tools.py' file.
     tool_imports (str): The necessary import statements for the tool.
     """
+
+    def is_function_code(code: str) -> bool:
+        """
+        Validates if the given code string is a function and not a class.
+        """
+        try:
+            parsed_code = ast.parse(code)  # Parse the code into an AST (Abstract Syntax Tree)
+            for node in parsed_code.body:
+                if isinstance(node, ast.FunctionDef):
+                    return True
+                if isinstance(node, ast.ClassDef):
+                    return False
+        except SyntaxError:
+            return False
+        return False
+    
+    # Validate if the provided tool_code is a function
+    if not is_function_code(tool_code):
+        return "Error: The provided tool_code is a class, but only functions are allowed."
+    
     swarm_name = context_variables.get("swarm_name")
     agent_tools = json.loads(context_variables.get('agent_tools'))
 
@@ -242,3 +266,133 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
         f.write("\n\n" + tool_code_str)
 
     return f"{tool_name} for {agent_name} has been successfully created."
+
+
+# Google Custom Search API setup
+API_KEY = "AIzaSyAFgqauNFcsyn5_BmfHzk3VpZ4mXOsHGQU"
+SEARCH_ENGINE_ID = "04d381c3e293144a2"
+
+def web_search(query, question):
+    """
+    Perform a Google Custom Search to find API documentation or find any relevant data and scrape the first URL for relevant information.
+    """
+
+    search_url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        "key": API_KEY,
+        "cx": SEARCH_ENGINE_ID,
+        "q": query,
+        "num": 1 
+    }
+    
+    response = requests.get(search_url, params=params)
+    search_results = response.json()
+
+    first_url = search_results["items"][0]["link"]
+
+    page_response = requests.get(first_url)
+    soup = BeautifulSoup(page_response.content, 'html.parser')
+    page_text = soup.get_text(separator=' ', strip=True)
+
+    extracted_info = query_gpt_for_information(page_text, question)
+
+    return extracted_info
+
+
+def query_gpt_for_information(content, question):
+    """
+    Send the scraped content to GPT or another LLM to extract relevant information.
+
+    Args:
+    content (str): The full scraped content.
+    question (str): The question to ask (e.g., "What is the base URL?").
+
+    Returns:
+    str: The relevant answer extracted by the LLM.
+    """
+    from dotenv import load_dotenv
+    import os
+    load_dotenv()
+    import openai
+
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    client = openai.OpenAI()
+
+    response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {
+            "role": "user",
+            "content": f"Based on the following documentation, {question}\n\n{content}"
+        }
+    ]
+)
+    
+    return response.choices[0].message.content
+    
+######################### WIP ######################
+import os
+import subprocess
+import importlib.util
+import sys
+
+def validate_tool(context_variables, tool_name):
+    swarm_name = context_variables.get("swarm_name")
+    path = f'examples/{swarm_name}/configs/'
+    tools_file_path = os.path.join(path, "tools.py")
+
+    errors = ""
+    
+    # Check if the tools.py file exists
+    if not os.path.exists(tools_file_path):
+        return "Error: tools.py file does not exist."
+
+    # Import the tool function from the tools.py file
+    spec = importlib.util.spec_from_file_location("tools", tools_file_path)
+    tools_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tools_module)
+
+    # Check if the tool function exists in the module
+    if not hasattr(tools_module, tool_name):
+        return f"Error: Tool '{tool_name}' not found in tools.py."
+
+    tool_function = getattr(tools_module, tool_name)
+
+    # Extract required imports from the tool code (You could implement a more robust method)
+    required_imports = extract_imports_from_tool_function(tool_function)
+
+    # Check for missing imports and install them if necessary
+    for imp in required_imports:
+        try:
+            importlib.import_module(imp)
+        except ImportError:
+            # Attempt to install the package in the virtual environment
+            errors += f"Warning: Required import '{imp}' not found. Attempting to install...\n"
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', imp])
+
+            # Try importing again after installation
+            try:
+                importlib.import_module(imp)
+            except ImportError:
+                errors += f"Error: Could not install the required import '{imp}'.\n"
+
+    # Run the tool and capture any errors
+    try:
+        tool_function()  # Call the function (consider providing arguments if needed)
+    except Exception as e:
+        errors += f"Error: Tool '{tool_name}' failed to run. Exception: {str(e)}"
+
+    if errors:
+        return errors.strip()
+    
+    return f"Tool '{tool_name}' validated successfully."
+
+def extract_imports_from_tool_function(func):
+    """
+    A placeholder function to extract necessary imports from the given function code.
+    You may implement a robust method to parse function code for imports.
+    For now, this can return a hardcoded list or some basic logic.
+    """
+    return ["requests", "json"]  # Example: return a list of required imports.
+

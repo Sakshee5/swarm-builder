@@ -108,7 +108,7 @@ agent_creator = Agent(
     functions=[update_context_variables_agentcreator, create_agents, transfer_to_tool_creator],
 )
 
-def tool_creator_instructions(context_variables):
+def tool_creator_instructions(context_variables): 
     agent_tools = context_variables.get("agent_tools")
 
     return f"""As a Tool Creator Agent within the Swarm framework, your role is to create tools for each agent as defined in the agent_tools structure.
@@ -119,14 +119,28 @@ Here is the agent_tools structure:
 ## Instructions:
 
 1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
-2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools. 
-3. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Ensure all the necessary imports are made. Ensure that each tool is python function with a detailed docstring which will act as the tool decsription.
-4. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
-5. Once all tools for all agents have been created, update the user that the swarm has been created.
+2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools.
+3. When an agent needs to gather external information, such as API documentation or relevant data from the web, use the `web_search` tool. This tool performs a search query and retrieves useful information to assist in tool creation or API implementation.
+4. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Use `web_search` to find API documentation or details when necessary. Ensure all the necessary imports are made. Each tool should be a Python function with a detailed docstring, which will act as the tool description.
+5. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
+6. Once all tools for all agents have been created, update the user that the swarm has been created.
+
+## Additional Notes:
+If a tool is outside the scope or cannot be directly implemented, ensure to still name the tool and create a function placeholder. In the placeholder, include as much detail as possible about what the tool would do and instructions on how it could be built in the future. If relevant, explain what challenges are present (e.g., missing API, permissions issues, etc.).
 """
+
 
 tool_creator = Agent(
     name="Tool Creator Agent",
     instructions=tool_creator_instructions,
-    functions=[create_tool],
+    functions=[create_tool, web_search],
+)
+
+def eval_creator_instructions(context_variables):
+    pass
+
+eval_generator = Agent(
+    name="Evaluations Generator",
+    instructions=eval_creator_instructions,
+    functions = []
 )
