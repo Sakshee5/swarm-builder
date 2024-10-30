@@ -6,6 +6,17 @@ import ast
 import requests
 import requests
 from bs4 import BeautifulSoup
+import os
+import subprocess
+import importlib.util
+import sys
+from dotenv import load_dotenv
+import os
+load_dotenv()
+import openai
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+client = openai.OpenAI()
 
 main_py_code = """from configs.agents import *
 from swarm.repl import run_demo_loop
@@ -310,13 +321,6 @@ def query_gpt_for_information(content, question):
     Returns:
     str: The relevant answer extracted by the LLM.
     """
-    from dotenv import load_dotenv
-    import os
-    load_dotenv()
-    import openai
-
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    client = openai.OpenAI()
 
     response = client.chat.completions.create(
     model="gpt-3.5-turbo",
@@ -330,69 +334,132 @@ def query_gpt_for_information(content, question):
 )
     
     return response.choices[0].message.content
-    
-######################### WIP ######################
-import os
-import subprocess
-import importlib.util
-import sys
 
-def validate_tool(context_variables, tool_name):
-    swarm_name = context_variables.get("swarm_name")
-    path = f'examples/{swarm_name}/configs/'
-    tools_file_path = os.path.join(path, "tools.py")
-
-    errors = ""
-    
-    # Check if the tools.py file exists
-    if not os.path.exists(tools_file_path):
-        return "Error: tools.py file does not exist."
-
-    # Import the tool function from the tools.py file
+def load_tools_module(tools_file_path):
+    """
+    Dynamically loads the tools.py file as a module.
+    """
     spec = importlib.util.spec_from_file_location("tools", tools_file_path)
     tools_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(tools_module)
+    return tools_module
 
-    # Check if the tool function exists in the module
-    if not hasattr(tools_module, tool_name):
-        return f"Error: Tool '{tool_name}' not found in tools.py."
+def is_import_in_tools_file(tools_file_path, import_name):
+    """
+    Check if a particular import statement exists in the tools.py file.
+    """
+    with open(tools_file_path, "r") as file:
+        content = file.read()
+        return f"import {import_name}" in content or f"from {import_name}" in content
+    
+def add_import_to_tools_file(tools_file_path, import_statement):
+    """
+    Adds a required import statement to the beginning of the tools.py file.
+    """
+    with open(tools_file_path, "r") as file:
+        content = file.readlines()
+    
+    # Prepend the new import statement to the beginning of the content
+    content.insert(0, f"{import_statement}\n")
+    
+    with open(tools_file_path, "w") as file:
+        file.writelines(content)
 
-    tool_function = getattr(tools_module, tool_name)
-
-    # Extract required imports from the tool code (You could implement a more robust method)
-    required_imports = extract_imports_from_tool_function(tool_function)
-
-    # Check for missing imports and install them if necessary
+def check_and_install_imports(required_imports, tools_file_path):
+    """
+    Check for missing imports and install them if necessary.
+    """
     for imp in required_imports:
+        module_name = imp.split()[-1]  # Extract the module name (e.g., "pandas" from "import pandas")
+        
+        if not is_import_in_tools_file(tools_file_path, module_name):
+            add_import_to_tools_file(tools_file_path, imp)
         try:
-            importlib.import_module(imp)
+            importlib.import_module(module_name)
         except ImportError:
-            # Attempt to install the package in the virtual environment
-            errors += f"Warning: Required import '{imp}' not found. Attempting to install...\n"
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', imp])
-
-            # Try importing again after installation
             try:
-                importlib.import_module(imp)
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', module_name])
+                importlib.import_module(module_name)
             except ImportError:
-                errors += f"Error: Could not install the required import '{imp}'.\n"
+                print(f"Error: Could not install the required import '{module_name}'")
 
-    # Run the tool and capture any errors
+    
+def extract_imports_from_function(tool_code):
+    response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a helpful code reviewer"},
+        {
+            "role": "user",
+            "content": f"""Based on the following code snippet for a python function:
+Tool Code
+---------------------       
+{tool_code}
+
+Return a python list of all the imports required by the method.
+
+For example;
+Tool Code:
+---------------------
+def my_function():
+    data = pd.DataFrame(np.random.randn(100, 4))
+    model = LinearRegression()
+    model.fit(data.iloc[:, :-1], data.iloc[:, -1])
+    return model
+    
+The return
+["import pandas as pd", "from sklearn.linear_model import LinearRegression"]
+
+Only return the python list."""
+        }
+    ]
+)
+    
+    return response.choices[0].message.content
+
+
+
+def validate_tool(context_variables, tool_name, tool_testing_arguments: dict):
+    """
+    Validates a tool by importing and running the tool function.
+    
+    Args:
+        context_variables (dict): Context info (like swarm_name).
+        tool_name (str): The name of the tool to validate.
+        tool_testing_arguments (dict): Arguments to pass to the tool function when running.
+
+    Returns:
+        str: Validation results with success or error messages.
+    """
+    swarm_name = context_variables.get("swarm_name")
+    path = f'examples/{swarm_name}/configs/'
+    tools_file_path = os.path.join(path, "tools.py")
+    
+    errors = ""
+    
+    if not os.path.exists(tools_file_path):
+        return "Error: tools.py file does not exist. First create tools."
+    
     try:
-        tool_function()  # Call the function (consider providing arguments if needed)
+        tools_module = load_tools_module(tools_file_path)
     except Exception as e:
-        errors += f"Error: Tool '{tool_name}' failed to run. Exception: {str(e)}"
-
+        return f"Error: Failed to load tools.py. Exception: {str(e)}"
+    
+    if not hasattr(tools_module, tool_name):
+        return f"Error: Tool '{tool_name}' not found in tools.py. First create the tool and then validate it."
+    
+    tool_function = getattr(tools_module, tool_name)
+    
+    required_imports = extract_imports_from_function(tool_function)
+    check_and_install_imports(required_imports)
+    
+    try:
+        tool_function(**tool_testing_arguments)
+    except Exception as e:
+        errors += f"Error: Tool '{tool_name}' encountered error: {str(e)}"
+    
     if errors:
-        return errors.strip()
+        return f"Errors encountered:\n{errors}\n\nTool '{tool_name}' validated with the above errors."
     
     return f"Tool '{tool_name}' validated successfully."
-
-def extract_imports_from_tool_function(func):
-    """
-    A placeholder function to extract necessary imports from the given function code.
-    You may implement a robust method to parse function code for imports.
-    For now, this can return a hardcoded list or some basic logic.
-    """
-    return ["requests", "json"]  # Example: return a list of required imports.
 

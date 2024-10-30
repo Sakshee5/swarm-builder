@@ -119,28 +119,30 @@ Here is the agent_tools structure:
 ## Instructions:
 
 1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
-2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools.
+2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools one by one sequentially.
 3. When an agent needs to gather external information, such as API documentation or relevant data from the web, use the `web_search` tool. This tool performs a search query and retrieves useful information to assist in tool creation or API implementation.
-4. Ensure you accurately implement real-world APIs or SDKs when creating the tools. Use `web_search` to find API documentation or details when necessary. Ensure all the necessary imports are made. Each tool should be a Python function with a detailed docstring, which will act as the tool description.
-5. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
-6. Once all tools for all agents have been created, update the user that the swarm has been created.
+4. After creating each tool, validate it using the `validate_tool` function:
+   - If there is a syntax or runtime error, use `create_tool` with the exact same function name to recreate the tool, addressing the error.
+   - If the error is due to user input (e.g., a required API key is missing), proceed to create a new tool but ensure to notify the user about the input issue at the end of the process.
+5. Ensure all the necessary imports are made. Each tool should be a Python function with a detailed docstring, which will act as the tool description.
+6. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
+7. Once all tools for all agents have been created and validated, update the user that the swarm has been created.
 
 ## Additional Notes:
-If a tool is outside the scope or cannot be directly implemented, ensure to still name the tool and create a function placeholder. In the placeholder, include as much detail as possible about what the tool would do and instructions on how it could be built in the future. If relevant, explain what challenges are present (e.g., missing API, permissions issues, etc.).
+If a tool is outside the scope or cannot be directly implemented, ensure to still name the tool and create a function placeholder. In the placeholder, include as much commented out detail or docstring decsription as possible about what the tool would do and instructions on how it could be built in the future. If relevant, explain what challenges are present (e.g., missing API, permissions issues, etc.).
 """
-
 
 tool_creator = Agent(
     name="Tool Creator Agent",
     instructions=tool_creator_instructions,
-    functions=[create_tool, web_search],
+    functions=[create_tool, web_search, validate_tool],
 )
 
-def eval_creator_instructions(context_variables):
-    pass
+# def eval_creator_instructions(context_variables):
+#     pass
 
-eval_generator = Agent(
-    name="Evaluations Generator",
-    instructions=eval_creator_instructions,
-    functions = []
-)
+# eval_generator = Agent(
+#     name="Evaluations Generator",
+#     instructions=eval_creator_instructions,
+#     functions = []
+# )

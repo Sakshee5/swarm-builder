@@ -4,6 +4,9 @@
 15. if you cant build the tool (cant write code), give instructions on how it can be possibly built or what the challenges are
 
 
+- create_tool is creating erroneous functions
+- validate_tool testing parameters need to be GPT generated.
+- can ask system to generate GPT tools
 
 2. Add evals for swarm builder
 3. Configure swarm builder to build evals
