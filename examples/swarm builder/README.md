@@ -7,6 +7,7 @@
 - create_tool is creating erroneous functions
 - validate_tool testing parameters need to be GPT generated.
 - can ask system to generate GPT tools
+- audio support
 
 2. Add evals for swarm builder
 3. Configure swarm builder to build evals
