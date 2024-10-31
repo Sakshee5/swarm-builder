@@ -207,21 +207,17 @@ def create_agents(context_variables: Dict) -> str:
 # Template for creating new tools
 tool_template = """{imports}
 
-def {tool_name}():
-    \"\"\"
-    {tool_description}
-    \"\"\"
-    {tool_code}
+{tool_code}
 """
 
-def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_imports: str) -> str:
+def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_imports: List) -> str:
     """
     Generates a new tool based on the provided parameters and writes it to the tools.py file.
 
     Args:
     tool_name (str): The name of the tool to be created.
     tool_code (str): Python class implementation of the tool to be added to the 'tools.py' file.
-    tool_imports (str): The necessary import statements for the tool.
+    tool_imports (List)): The necessary import statements for the tool as a List ['import numpy as np', 'import pandas as pd',]
     """
 
     def is_function_code(code: str) -> bool:
@@ -263,18 +259,16 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     os.makedirs(path, exist_ok=True)  # Ensure the directory exists
     tools_file_path = os.path.join(path, "tools.py")
 
-    # Format the tool code using the template
-    tool_code_str = tool_template.format(
-        imports=tool_imports,
-        tool_name=tool_name,
-        tool_description=tool_description,
-        tool_code=tool_code
-    )
+    for imp in tool_imports:
+        if is_import_in_tools_file(imp):
+            pass
+        else:
+            add_import_to_tools_file(imp)
 
     # Write the tool code to the tools.py file, appending if it exists
     mode = "a" if os.path.exists(tools_file_path) else "w"
     with open(tools_file_path, mode) as f:
-        f.write("\n\n" + tool_code_str)
+        f.write("\n\n" + tool_code)
 
     return f"{tool_name} for {agent_name} has been successfully created."
 
