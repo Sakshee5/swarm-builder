@@ -1,1 +1,1 @@
-from .repl import run_demo_loop
+from .repl import run_demo_loop, streamlit_loop

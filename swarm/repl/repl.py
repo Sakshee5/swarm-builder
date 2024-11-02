@@ -1,5 +1,5 @@
 import json
-
+import streamlit as st
 from swarm import Swarm
 
 
@@ -50,11 +50,36 @@ def pretty_print_messages(messages) -> None:
         tool_calls = message.get("tool_calls") or []
         if len(tool_calls) > 1:
             print()
+
         for tool_call in tool_calls:
             f = tool_call["function"]
             name, args = f["name"], f["arguments"]
             arg_str = json.dumps(json.loads(args)).replace(":", "=")
             print(f"\033[95m{name}\033[0m({arg_str[1:-1]})")
+
+
+def pretty_print_messages_streamlit(messages) -> None:
+    for message in messages:
+        if message["role"] != "assistant":
+            continue
+
+        # print agent name in blue
+        st.write(f"\033[94m{message['sender']}\033[0m:", end=" ")
+
+        # print response, if any
+        if message["content"]:
+            return message["content"]
+
+        # print tool calls in purple, if any
+        tool_calls = message.get("tool_calls") or []
+        if len(tool_calls) > 1:
+            st.write()
+
+        for tool_call in tool_calls:
+            f = tool_call["function"]
+            name, args = f["name"], f["arguments"]
+            arg_str = json.dumps(json.loads(args)).replace(":", "=")
+            st.write(f"\033[95m{name}\033[0m({arg_str[1:-1]})")
 
 
 def run_demo_loop(
@@ -85,3 +110,28 @@ def run_demo_loop(
 
         messages.extend(response.messages)
         agent = response.agent
+
+
+def streamlit_loop(
+    messages, starting_agent, context_variables=None, debug=False
+) -> None:
+    client = Swarm()
+    st.write("Starting Swarm CLI 🐝")
+
+    agent = starting_agent
+    response = client.run(
+        agent=agent,
+        messages=messages,
+        context_variables=context_variables or {},
+        debug=debug,
+    )
+
+    return_message = pretty_print_messages_streamlit(response.messages)
+
+    messages.extend(response.messages)
+    agent = response.agent
+
+    return return_message
+
+
+

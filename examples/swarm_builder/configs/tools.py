@@ -260,10 +260,10 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     tools_file_path = os.path.join(path, "tools.py")
 
     for imp in tool_imports:
-        if is_import_in_tools_file(imp):
+        if is_import_in_tools_file(tools_file_path, imp):
             pass
         else:
-            add_import_to_tools_file(imp)
+            add_import_to_tools_file(tools_file_path, imp)
 
     # Write the tool code to the tools.py file, appending if it exists
     mode = "a" if os.path.exists(tools_file_path) else "w"
