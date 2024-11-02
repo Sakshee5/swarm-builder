@@ -123,30 +123,31 @@ def {agent_name}_instructions():
 )
 """
 
-AgentType = Dict[str, Union[
-    List[str],  # List of tools or tool descriptions
-    str         # Agent instructions
-]]
+def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Dict):
 
-JsonType = Dict[str, AgentType]
+    # try:
+    #     _ = json.loads(agent_tools)
 
-def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Any):
-    # agent_tools = json.dumps(agent_tools)
+    #     context_variables.update(
+    #     { 
+    #         "agent_tools": agent_tools
+    #     }
+    # )
 
-    try:
-        _ = json.loads(agent_tools)
+    #     print('Context Variables:\n', context_variables)
+    #     return "Context variables have been successfully updated with agent_tools."
 
-        context_variables.update(
-        { 
+    # except:
+    #     return "agent_tools should be a valid JSON."
+
+    context_variables.update(
+        {
             "agent_tools": agent_tools
         }
     )
+    print('Context Variables:\n', context_variables)
 
-        print('Context Variables:\n', context_variables)
-        return "Context variables have been successfully updated with agent_tools."
-
-    except:
-        return "agent_tools should be a valid JSON."
+    return "Context variables have been successfully updated with agent_tools."
 
 
 def create_transfer_function(transfer_agent):
@@ -166,7 +167,12 @@ def create_agents(context_variables: Dict) -> str:
     swarm_name = context_variables.get('swarm_name')
     swarm_structure = list(context_variables.get('swarm_structure'))
 
-    agent_tools = json.loads(context_variables.get('agent_tools'))
+    # agent_tools = json.loads(context_variables.get('agent_tools'))
+    agent_tools = context_variables.get('agent_tools').replace("'", '"')
+    try:
+        agent_tools = json.loads(agent_tools)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
 
     # Initialize the path for the agents.py file
     agents_file_path = os.path.join(f'inceptions/{swarm_name}/configs', 'agents.py')

@@ -5,7 +5,9 @@ from swarm.types import Result
 def manager_instructions(context_variables):
     user_name = context_variables.get("user_name") 
 
-    return f"""You are responsible for creating an effective and minimalistic swarm structure based on the users request. To ensure user satisfaction and efficient task execution, follow these key guidelines:
+    return f"""You are responsible for creating an effective and minimalistic swarm structure based on the users request. The swarm that you build for the user will run on CLI and can handle user_inputs and display results on the terminal.
+    
+To ensure user satisfaction and efficient task execution, follow these key guidelines:
 
 1. **Engage in Initial Clarification**:
    - When a users intent is not fully explicit, prioritize understanding their needs by asking focused questions. 
