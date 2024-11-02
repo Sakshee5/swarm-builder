@@ -125,21 +125,6 @@ def {agent_name}_instructions():
 
 def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Dict):
 
-    # try:
-    #     _ = json.loads(agent_tools)
-
-    #     context_variables.update(
-    #     { 
-    #         "agent_tools": agent_tools
-    #     }
-    # )
-
-    #     print('Context Variables:\n', context_variables)
-    #     return "Context variables have been successfully updated with agent_tools."
-
-    # except:
-    #     return "agent_tools should be a valid JSON."
-
     context_variables.update(
         {
             "agent_tools": agent_tools
@@ -264,19 +249,6 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     swarm_name = context_variables.get("swarm_name")
     agent_tools = json.loads(context_variables.get('agent_tools'))
     print(agent_tools)
-
-    # tool_description = None
-
-    # # Find the tool description based on the tool_name
-    # for agent_name, agent_info in agent_tools.items():
-    #     if tool_name in agent_info['tools']:
-    #         idx = agent_info['tools'].index(tool_name)
-    #         tool_description = agent_info['tool_descriptions'][idx]
-    #         break
-
-    # # Check if the tool was found
-    # if not tool_description:
-    #     return f"Tool description for {tool_name} not found."
 
     path = f'inceptions/{swarm_name}/configs/'
     os.makedirs(path, exist_ok=True)  # Ensure the directory exists
