@@ -37,7 +37,6 @@ if st.session_state.name is None:
     if st.button("Log In"):
         if name_input:
             st.session_state.name = name_input
-            st.success(f"Welcome, {st.session_state.name}!")
         else:
             st.error("Please enter a name to continue.")
 
@@ -52,6 +51,7 @@ By providing a robust foundation that you can build on within minutes, we're her
 
     st.title("💬 Inception - OpenAI Swarm")
     st.caption("🚀 A swarm to build swarms!")
+    st.success(f"Welcome, {st.session_state.name}!")
 
     # Context variables for the session
     context_variables = {"user_name": st.session_state.name}
@@ -73,7 +73,7 @@ By providing a robust foundation that you can build on within minutes, we're her
         with st.chat_message("assistant"):
             try:
                 with st.spinner("Thinking..."):
-                    response_messages = get_response(user_input)
+                    response_messages = get_response()
 
     
                 for message in response_messages:
