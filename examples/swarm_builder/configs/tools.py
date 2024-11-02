@@ -347,15 +347,24 @@ def add_import_to_tools_file(tools_file_path, import_statement):
     with open(tools_file_path, "w") as file:
         file.writelines(content)
 
+def is_in_venv():
+    """Check if the script is running within a virtual environment."""
+    return (hasattr(sys, 'real_prefix') or
+            (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
+
 def check_and_install_imports(required_imports, tools_file_path):
     """
-    Check for missing imports and install them if necessary.
+    Check for missing imports and install them if necessary, but only if in a virtual environment.
     """
-    for imp in required_imports:
+    if not is_in_venv():
+        return "Error: Installation is only allowed within a virtual environment. Ask user to install manually."
+
+    for imp in required_imports:  
         module_name = imp.split()[-1]  # Extract the module name (e.g., "pandas" from "import pandas")
         
         if not is_import_in_tools_file(tools_file_path, module_name):
             add_import_to_tools_file(tools_file_path, imp)
+        
         try:
             importlib.import_module(module_name)
         except ImportError:
@@ -444,4 +453,70 @@ def validate_tool(context_variables, tool_name, tool_testing_arguments: dict):
         return f"Errors encountered:\n{errors}\n\nTool '{tool_name}' validated with the above errors."
     
     return f"Tool '{tool_name}' validated successfully."
+
+
+def extract_details_from_function(tool_code):
+    response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a helpful code reviewer"},
+        {
+            "role": "user",
+            "content": f"""Based on the following code snippet for a python function:
+Tool Code
+---------------------       
+{tool_code}
+
+Return a JSON in the following format"""+"""
+    
+{
+"imports": ["import pandas as pd", "from sklearn.linear_model import LinearRegression"],
+"user_inputs": "a sentence about whether any api keys are required or whether any other user modificaiton is needed before the tool can be run. Say 'None Required' if no user modification is needed."
+}
+
+Only return the JSON."""
+        }
+    ]
+)
+    result = json.loads(response.choices[0].message.content)
+    return result['imports'], result["user_inputs"]
+
+
+def install_dependencies(context_variables, tool_name):
+    """
+    Installs all the dependies to run the swarm.
+    
+    Args:
+        context_variables (dict): Context info (like swarm_name).
+        tool_name (str): The name of the tool to validate.
+
+    Returns:
+        str: installation results with success or error messages.
+    """
+    swarm_name = context_variables.get("swarm_name")
+    path = f'inceptions/{swarm_name}/configs/'
+    tools_file_path = os.path.join(path, "tools.py")
+    
+    if not os.path.exists(tools_file_path):
+        return "Error: tools.py file does not exist. First create tools."
+    
+    try:
+        tools_module = load_tools_module(tools_file_path)
+    except Exception as e:
+        return f"Error: Failed to load tools.py. Exception: {str(e)}"
+    
+    if not hasattr(tools_module, tool_name):
+        return f"Error: Tool '{tool_name}' not found in tools.py. First create the tool and then validate it."
+    
+    tool_function = getattr(tools_module, tool_name)
+    
+    try:
+        required_imports, api_key_reqs = extract_details_from_function(tool_function)
+        check_and_install_imports(required_imports)
+
+    except Exception as e:
+        print(str(e))
+        return f"Error installing dependency. Please install {required_imports} manually."
+    
+    return f"Required libraries have been installed. Swarm can be run using 'python inceptions/{swarm_name}/main.py'. The following modifications maybe needed before the swarm can be run: {api_key_reqs}"
 
