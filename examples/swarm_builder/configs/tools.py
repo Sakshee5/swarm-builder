@@ -38,23 +38,33 @@ def create_swarm_structure(context_variables: Dict, starting_agent: Agent) -> st
     except Exception as e:
         return "Please `update_context_variables_manager` before trying to `update_goals`"
 
-    os.makedirs(f'examples/{swarm_name}/configs', exist_ok=True)
-    os.makedirs(f'examples/{swarm_name}/data', exist_ok=True)
+    os.makedirs(f'inceptions/{swarm_name}/configs', exist_ok=True)
+    os.makedirs(f'inceptions/{swarm_name}/configs', exist_ok=True)
+    os.makedirs(f'inceptions/{swarm_name}/data', exist_ok=True)
     
-    with open(f'examples/{swarm_name}/__init__.py', 'w') as f:
+    with open(f'inceptions/{swarm_name}/__init__.py', 'w') as f:
         f.write('# Init file for swarm\n')
-    with open(f'examples/{swarm_name}/configs/__init__.py', 'w') as f:
+    with open(f'inceptions/{swarm_name}/configs/__init__.py', 'w') as f:
         f.write('# Init file for configs\n')
-    with open(f'examples/{swarm_name}/data/__init__.py', 'w') as f:
+    with open(f'inceptions/{swarm_name}/data/__init__.py', 'w') as f:
         f.write('# Init file for data\n')
 
-    with open(f'examples/{swarm_name}/main.py', 'w') as f:
+    with open(f'inceptions/{swarm_name}/data/__init__.py', 'w') as f:
+        f.write('# Init file for data\n')
+
+    with open(f'inceptions/{swarm_name}/configs/agents.py', 'w') as f:
+        f.write('# Agents configuration file\n\n')
+
+    with open(f'inceptions/{swarm_name}/configs/tools.py', 'w') as f:
+        f.write('# Tools configuration file\n\n')
+
+    with open(f'inceptions/{swarm_name}/main.py', 'w') as f:
         f.write(main_py_code.format(
             context_variables=context_variables,
             starting_agent=starting_agent,
             ))
 
-    return "Swarm Structure has been successfully created."
+    return "Swarm Directory has been successfully created. Move on to create the required agents and tools within the generated folders."
 
 
 
@@ -69,10 +79,16 @@ def update_goals(context_variables: Dict, goals: str) -> str:
         return "Please `update_context_variables_manager` before trying to `update_goals`"
     
     try:
-        with open(f'examples/{swarm_name}/data/goals.md', 'w') as f:
+        with open(f'inceptions/{swarm_name}/data/goals.md', 'w') as f:
             f.write(goals)
     except Exception as e:
         return "Please `create_swarm_structure` before setting goals."
+    
+    context_variables.update(
+        {
+            "swarm_goals": goals,
+        }
+    )
 
     return "Goals and Mission for the swarm has been updated."
 
@@ -115,6 +131,8 @@ AgentType = Dict[str, Union[
 JsonType = Dict[str, AgentType]
 
 def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Any):
+    # agent_tools = json.dumps(agent_tools)
+
     try:
         _ = json.loads(agent_tools)
 
@@ -147,14 +165,11 @@ def create_agents(context_variables: Dict) -> str:
     """
     swarm_name = context_variables.get('swarm_name')
     swarm_structure = list(context_variables.get('swarm_structure'))
+
     agent_tools = json.loads(context_variables.get('agent_tools'))
 
     # Initialize the path for the agents.py file
-    agents_file_path = os.path.join(f'examples/{swarm_name}/configs', 'agents.py')
-
-    # Create or clear the agents.py file
-    with open(agents_file_path, "w") as f:
-        f.write("# Agents configuration file\n\n")
+    agents_file_path = os.path.join(f'inceptions/{swarm_name}/configs', 'agents.py')
 
     # Loop through each agent in the swarm structure
     for i, (agent_name, agent_info) in enumerate(agent_tools.items()):
@@ -239,25 +254,30 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     if not is_function_code(tool_code):
         return "Error: The provided tool_code is a class, but only functions are allowed."
     
+    print(f"Creating a tool for: {tool_name}")
     swarm_name = context_variables.get("swarm_name")
     agent_tools = json.loads(context_variables.get('agent_tools'))
+    print(agent_tools)
 
-    tool_description = None
+    # tool_description = None
 
-    # Find the tool description based on the tool_name
-    for agent_name, agent_info in agent_tools.items():
-        if tool_name in agent_info['tools']:
-            idx = agent_info['tools'].index(tool_name)
-            tool_description = agent_info['tool_descriptions'][idx]
-            break
+    # # Find the tool description based on the tool_name
+    # for agent_name, agent_info in agent_tools.items():
+    #     if tool_name in agent_info['tools']:
+    #         idx = agent_info['tools'].index(tool_name)
+    #         tool_description = agent_info['tool_descriptions'][idx]
+    #         break
 
-    # Check if the tool was found
-    if not tool_description:
-        return f"Tool description for {tool_name} not found."
+    # # Check if the tool was found
+    # if not tool_description:
+    #     return f"Tool description for {tool_name} not found."
 
-    path = f'examples/{swarm_name}/configs/'
+    path = f'inceptions/{swarm_name}/configs/'
     os.makedirs(path, exist_ok=True)  # Ensure the directory exists
     tools_file_path = os.path.join(path, "tools.py")
+
+    if isinstance(tool_imports, str):
+        tool_imports = tool_imports.split(",")
 
     for imp in tool_imports:
         if is_import_in_tools_file(tools_file_path, imp):
@@ -270,7 +290,7 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     with open(tools_file_path, mode) as f:
         f.write("\n\n" + tool_code)
 
-    return f"{tool_name} for {agent_name} has been successfully created."
+    return f"{tool_name} has been successfully created."
 
 
 # Google Custom Search API setup
@@ -426,7 +446,7 @@ def validate_tool(context_variables, tool_name, tool_testing_arguments: dict):
         str: Validation results with success or error messages.
     """
     swarm_name = context_variables.get("swarm_name")
-    path = f'examples/{swarm_name}/configs/'
+    path = f'inceptions/{swarm_name}/configs/'
     tools_file_path = os.path.join(path, "tools.py")
     
     errors = ""
