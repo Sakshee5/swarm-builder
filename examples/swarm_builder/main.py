@@ -6,7 +6,7 @@ import os
 load_dotenv()
 import openai
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY") 
 
 user_name = input("Please Enter Your Name:")
 context_variables = {"user_name": user_name}

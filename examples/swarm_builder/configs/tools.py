@@ -28,10 +28,10 @@ if __name__ == "__main__":
 
 # MANAGER TOOLS
 # Function to create the agency structure
-def create_swarm_structure(context_variables: Dict, starting_agent: Agent) -> str:
+def create_swarm_structure(context_variables: dict, starting_agent: Agent) -> str:
     """
     This function creates the necessary directories and files for the specified swarm, including
-    `configs` and `data` folders. It also generates the `main.py` file and other initialization files.
+    `configs` and `data` folders. It also generates the `main.py`, `agents.py`, `tools.py` file and other initialization files.
     """
     try:
         swarm_name = context_variables.get("swarm_name")
@@ -68,7 +68,7 @@ def create_swarm_structure(context_variables: Dict, starting_agent: Agent) -> st
 
 
 
-def update_goals(context_variables: Dict, goals: str) -> str:
+def update_goals(context_variables: dict, goals: str) -> str:
     """
     This function writes the specified goals and mission statement to the `goals.md` file located
     in the `data` directory of the swarm.
@@ -93,7 +93,8 @@ def update_goals(context_variables: Dict, goals: str) -> str:
     return "Goals and Mission for the swarm has been updated."
 
 
-def update_context_variables_manager(context_variables: Dict, swarm_name: str, swarm_structure: List[Union[str, List]]):
+def update_context_variables_manager(context_variables: dict, swarm_name: str, swarm_structure: List[Union[str, List]]):
+
     context_variables.update(
         {
             "swarm_name": swarm_name,
@@ -123,16 +124,19 @@ def {agent_name}_instructions():
 )
 """
 
-def update_context_variables_agentcreator(context_variables: Dict, agent_tools: Dict):
+def update_context_variables_agentcreator(context_variables: dict, agent_tools: dict = None):
 
-    context_variables.update(
-        {
-            "agent_tools": agent_tools
-        }
-    )
-    print('Context Variables:\n', context_variables)
+    if agent_tools:
+        context_variables.update(
+            {
+                "agent_tools": agent_tools
+            }
+        )
+        print('Context Variables:\n', context_variables)
 
-    return "Context variables have been successfully updated with agent_tools."
+        return "Context variables have been successfully updated with agent_tools."
+    else:
+        return "Please pass `agent_tools` parameter for this tool to run successfully."
 
 
 def create_transfer_function(transfer_agent):
@@ -144,20 +148,18 @@ def transfer_to_{transfer_agent}():
     return {transfer_agent}
 """
 
-def create_agents(context_variables: Dict) -> str:
+def create_agents(context_variables: dict) -> str:
     """
-    This function constructs the code for all agents, including instructions, transfer functions,
+    No arguments are needed. This function constructs the code for all agents, including instructions, transfer functions,
     and any additional specified functions. It writes the generated code to `agents.py`.
     """
     swarm_name = context_variables.get('swarm_name')
     swarm_structure = list(context_variables.get('swarm_structure'))
 
-    # agent_tools = json.loads(context_variables.get('agent_tools'))
-    agent_tools = context_variables.get('agent_tools').replace("'", '"')
-    try:
-        agent_tools = json.loads(agent_tools)
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
+    if 'agent_tools' not in context_variables:
+        return "First use the `update_context_variables_agentcreator` tool to update the context_variables."
+    else:
+        agent_tools = context_variables.get("agent_tools")
 
     # Initialize the path for the agents.py file
     agents_file_path = os.path.join(f'inceptions/{swarm_name}/configs', 'agents.py')
@@ -216,14 +218,13 @@ tool_template = """{imports}
 {tool_code}
 """
 
-def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_imports: List) -> str:
+def create_tool(context_variables: dict, tool_name: str, tool_code: str) -> str:
     """
     Generates a new tool based on the provided parameters and writes it to the tools.py file.
 
     Args:
     tool_name (str): The name of the tool to be created.
     tool_code (str): Python class implementation of the tool to be added to the 'tools.py' file.
-    tool_imports (List)): The necessary import statements for the tool as a List ['import numpy as np', 'import pandas as pd',]
     """
 
     def is_function_code(code: str) -> bool:
@@ -247,23 +248,12 @@ def create_tool(context_variables: Dict, tool_name: str, tool_code: str, tool_im
     
     print(f"Creating a tool for: {tool_name}")
     swarm_name = context_variables.get("swarm_name")
-    agent_tools = json.loads(context_variables.get('agent_tools'))
-    print(agent_tools)
+    agent_tools = context_variables.get('agent_tools')
 
     path = f'inceptions/{swarm_name}/configs/'
     os.makedirs(path, exist_ok=True)  # Ensure the directory exists
     tools_file_path = os.path.join(path, "tools.py")
 
-    if isinstance(tool_imports, str):
-        tool_imports = tool_imports.split(",")
-
-    for imp in tool_imports:
-        if is_import_in_tools_file(tools_file_path, imp):
-            pass
-        else:
-            add_import_to_tools_file(tools_file_path, imp)
-
-    # Write the tool code to the tools.py file, appending if it exists
     mode = "a" if os.path.exists(tools_file_path) else "w"
     with open(tools_file_path, mode) as f:
         f.write("\n\n" + tool_code)

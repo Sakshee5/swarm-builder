@@ -59,6 +59,7 @@ manager_agent = Agent(
     name="Manager Agent",
     instructions=manager_instructions,
     functions=[create_swarm_structure, update_context_variables_manager, update_goals, transfer_to_agent_creator],
+    
 )
 
 
@@ -68,42 +69,31 @@ def agent_creator_instructions(context_variables):
     agent_tools = """{
 "agent_name_1":
 {
-"tools": ["tool1", "tool2"], 
-"tool_descriptions": ["Description for tool1", "Description for tool2"],
+"tools": ["tool_1", "tool_2"], 
 "agent_instructions": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
 }, 
 "agent_name_2":
 { 
-"tools": ["tool1", "tool2"], 
-"tool_descriptions": [Description for tool1", "Description for tool2", ...],
+"tools": ["tool_1", "tool_2"], 
 "agent_instructions ": "detailed instructions for the agent. what tools it has, how it can be used. When and which all agents it can transfer to etc."
 },
 ....
 }"""
 
-    instructions =  """You are an agent responsible for creating other agents based on the provided swarm structure. Follow these instructions to create each agent and define the tools they will need.
+    instructions =  """You are Agent Creator. You are responsible for creating agents based on the provided swarm structure. 
 
 ### Swarm Structure:
 {swarm_structure}
 
-## Primary Instructions:
+## Follow these Instructions:
 
-1. **Analyze Each Agent's Role**:
-   - Review the role of each agent based on the swarm structure and the users goals. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose.
-
-2. **Define the Tools and Descriptions**:
-   - Based on your analysis, come up with a structure that defines the tools and APIs required for each agent in the JSON format below:
+1. Based on the swarm structure above, generate instructions for each agent and tools that the agent will use. For instance, if an agent is a `data_fetcher`, identify the APIs or tools it will need for fetching and processing external data relevant to the swarm's purpose. Make sure each tool or API aligns with the agents role and its functions within the swarm. The tools you create will be the name of the python function so use underscores (_) if its a two-word name.
    
 {agent_tools}
 
-- Make sure each tool or API aligns with the agents role and its functions within the swarm.
-
-3. Use the `update_context_variables_agentcreator` to update the `context_variables`.
-
-4. Use the `create_agents` tool to generate the agents based on the `agent_and_tools` structure.
-
-6. Once the agents are created, transfer control to the `tool_creator` agent for it to create all the required tools.
-"""
+3. Next, call the `update_context_variables_agentcreator` tool by passing 'agent_tools' to the function.
+4. After successful updation of context_variables, use the `create_agents` tool.
+5. Once the agents are created and you receive the confirmation, transfer control to the `tool_creator` agent for it to create all the required tools."""
 
     return instructions.format(
         swarm_structure = swarm_structure,
@@ -121,6 +111,7 @@ agent_creator = Agent(
     name="Agent Creator Agent",
     instructions=agent_creator_instructions,
     functions=[update_context_variables_agentcreator, create_agents, transfer_to_tool_creator],
+
 )
 
 def tool_creator_instructions(context_variables): 
@@ -133,19 +124,20 @@ Here is the agent_tools structure:
 
 ## Instructions:
 
-1. Review the agent_tools structure, which includes details about each agent's name, the tools they need, and their descriptions.
-2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools one by one sequentially.
+1. Review the agent_tools structure, which includes details about each agent's name, the tools they need.
+2. For each agent in the list, identify all tools that need to be created. Use the `create_tool` function to generate these tools one by one sequentially. Include the import within the tool_code function itself.
 3. When an agent needs to gather external information, such as API documentation or relevant data from the web, use the `web_search` tool. This tool performs a search query and retrieves useful information to assist in tool creation or API implementation.
-4. After creating each tool, validate it using the `validate_tool` function:
-   - If there is a syntax or runtime error, use `create_tool` with the exact same function name to recreate the tool, addressing the error.
-   - If the error is due to user input (e.g., a required API key is missing), proceed to create a new tool but ensure to notify the user about the input issue at the end of the process.
-5. Ensure all the necessary imports are made. Each tool should be a Python function with a detailed docstring, which will act as the tool description.
-6. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
+4. Ensure all the necessary imports are made. Each tool should be a Python function with a detailed docstring, which will act as the tool description.
+5. If multiple tools are required for an agent, create them sequentially before moving on to the next agent.
 7. Once all tools for all agents have been created and validated, update the user that the swarm has been created.
 
 ## Additional Notes:
 If a tool is outside the scope or cannot be directly implemented, ensure to still name the tool and create a function placeholder. In the placeholder, include as much commented out detail or docstring decsription as possible about what the tool would do and instructions on how it could be built in the future. If relevant, explain what challenges are present (e.g., missing API, permissions issues, etc.).
 """
+
+# 4. After creating each tool, validate it using the `validate_tool` function:
+#    - If there is a syntax or runtime error, use `create_tool` with the exact same function name to recreate the tool, addressing the error.
+#    - If the error is due to user input (e.g., a required API key is missing), proceed to create a new tool but ensure to notify the user about the input issue at the end of the process.
 
 tool_creator = Agent(
     name="Tool Creator Agent",
