@@ -1,0 +1,1 @@
+Create a system that fetches the latest Bitcoin price, 24-hour price change, and recent news. Ensure timely updates and accurate data from chosen APIs.

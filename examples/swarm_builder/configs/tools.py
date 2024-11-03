@@ -154,7 +154,11 @@ def create_agents(context_variables: dict) -> str:
     and any additional specified functions. It writes the generated code to `agents.py`.
     """
     swarm_name = context_variables.get('swarm_name')
-    swarm_structure = list(context_variables.get('swarm_structure'))
+    original_swarm_structure = context_variables.get('swarm_structure')
+    swarm_structure_str = original_swarm_structure.split('=', 1)[-1].strip() 
+    swarm_structure = ast.literal_eval(swarm_structure_str)
+    print(f"Type of swarm structure: {type(swarm_structure)}")
+    print(f"swarm structure: {swarm_structure}")
 
     if 'agent_tools' not in context_variables:
         return "First use the `update_context_variables_agentcreator` tool to update the context_variables."
@@ -171,12 +175,18 @@ def create_agents(context_variables: dict) -> str:
 
         # Find transfer agents based on the swarm structure
         transfer_agents = []
-        for connection in swarm_structure:
-            if isinstance(connection, list) and connection[0] == agent_name:
-                transfer_agents.append(connection[1])
+        for j, connection in enumerate(swarm_structure):
+            print(f"connection: {connection}")
+            if j==0:
+                pass
+            else:
+                if isinstance(connection, list) and connection[0] == agent_name:
+                    transfer_agents.append(connection[1])
 
         # Create transfer functions for this agent
         transfer_functions = "\n".join([create_transfer_function(agent) for agent in transfer_agents])
+
+        print(f"transfer_functions: {transfer_functions}")
         
         # List of transfer functions and additional functions/tools
         all_functions = [f"transfer_to_{agent}" for agent in transfer_agents]
@@ -262,8 +272,8 @@ def create_tool(context_variables: dict, tool_name: str, tool_code: str) -> str:
 
 
 # Google Custom Search API setup
-API_KEY = "AIzaSyAFgqauNFcsyn5_BmfHzk3VpZ4mXOsHGQU"
-SEARCH_ENGINE_ID = "04d381c3e293144a2"
+API_KEY = os.getenv("WEB_SEARCH_KEY")
+SEARCH_ENGINE_ID = os.getenv("WEB_SEARCH_ID")
 
 def web_search(query, question):
     """
@@ -509,9 +519,9 @@ def install_dependencies(context_variables, tool_name):
         return f"Error: Tool '{tool_name}' not found in tools.py. First create the tool and then validate it."
     
     tool_function = getattr(tools_module, tool_name)
-    
+
+    required_imports, api_key_reqs = extract_details_from_function(tool_function)
     try:
-        required_imports, api_key_reqs = extract_details_from_function(tool_function)
         check_and_install_imports(required_imports)
 
     except Exception as e:

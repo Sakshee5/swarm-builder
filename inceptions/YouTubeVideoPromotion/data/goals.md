@@ -1,0 +1,1 @@
+The goal of this swarm is to promote YouTube videos by retrieving their transcript using the YouTube API, and then generating catchy headers and concise, fun descriptions for posting.

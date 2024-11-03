@@ -1,15 +1,27 @@
+import requests
+import base64
 
-from dotenv import load_dotenv
-import os
-load_dotenv()
-import openai
+client_id = 'fe55761c9d6c43d2be9c3ed57f506577'
+client_secret = '9bb23630df894400b831dbc622d82c6c'
 
-openai.api_key = os.getenv("OPENAI_API_KEY") 
+# Encode Client ID and Secret
+auth_string = f"{client_id}:{client_secret}"
+b64_auth_string = base64.b64encode(auth_string.encode()).decode()
 
-import openai
+# Request Token
+token_url = "https://accounts.spotify.com/api/token"
+headers = {
+    "Authorization": f"Basic {b64_auth_string}"
+}
+data = {
+    "grant_type": "client_credentials"
+}
 
-from openai import OpenAI
-client = OpenAI()
+response = requests.post(token_url, headers=headers, data=data)
+response_data = response.json()
 
-print(client.models.list())
-
+if response.status_code == 200:
+    access_token = response_data['access_token']
+    print("Access Token:", access_token)
+else:
+    print("Error:", response_data)

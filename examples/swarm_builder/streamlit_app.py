@@ -75,9 +75,10 @@ By providing a robust foundation that you can build on within minutes, we're her
                 with st.spinner("Thinking..."):
                     response_messages = get_response()
 
-    
                 for message in response_messages:
-                    st.markdown(f"**{message['role']}**: {message['content']}")
+
+                    if message['role'] == 'assistant' and message['content']:
+                        st.markdown(f"**{message['role']}**: {message['content']}")
                     st.session_state.messages.append(message)
         
             except Exception as e:
