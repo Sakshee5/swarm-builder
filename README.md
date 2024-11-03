@@ -1,6 +1,6 @@
 # Contributing: Inception Swarm
 
-As part of an AI Hackathon at Duke University, we developed an innovative addition to the OpenAI Swarm framework - a new "swarm_builder" that dynamically generates new openai swarms based on user prompts. This project allows users to create customizable swarms for specific use cases, providing a streamlined and efficient way to set up multi-agent systems without manual setup for each new task. 
+As part of an AI Hackathon at Duke University, we developed an innovative addition to the OpenAI Swarm framework - a new "swarm_builder" that dynamically generates new openai swarms based on user prompts. This project allows users to create simple customizable swarms for specific use cases, providing a streamlined and efficient way to set up multi-agent systems without manual setup for each new task. 
 
 Contributors:
 - Sakshee Patil
@@ -10,7 +10,7 @@ Contributors:
 
 ## Inspiration - A Swarm to build Swarms !!
 
-Building out an idea often takes considerable time, even to just get the basic structure right. With `swarm_builder`, you can quickly prototype various ideas, gaining an immediate sense of their feasibility. This approach allows you to test around 10 ideas in the time it would typically take to prototype one. While you might still need to add a few tweaks and some custom code to make your swarm fully functional, we believe having a foundational structure ready within minutes is incredibly helpful. This tool offers a starting point that enables rapid iteration and testing, letting you focus more on refining the swarm’s specific functionality than on setting up the initial framework.
+Building out an idea often takes considerable time, even to just get the basic structure right. With `swarm_builder`, you can quickly prototype various ideas, gaining an immediate sense of their feasibility. **This approach allows you to test around 10 ideas in the time it would typically take to prototype one.** While you might still need to add a few tweaks and some custom code to make your swarm fully functional, we believe having a foundational structure ready within minutes is incredibly helpful. This tool offers a starting point that enables rapid iteration and testing, letting you focus more on refining the swarm’s specific functionality than on setting up the initial framework. And even if you’re not looking to build a system of agents, `swarm_builder` still provides a structured framework and boilerplate code for brainstorming and fleshing out your ideas. You can experiment with different concepts and functionalities, all with minimal setup, allowing for rapid iteration and refinement.
 
 ## Pitch
 
