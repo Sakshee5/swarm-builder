@@ -89,7 +89,7 @@ def agent_creator_instructions(context_variables):
 
 For each agent in the swarm structure, generate clear and detailed instructions, including:
    - The **role** of the agent goes in `agent_instructions`. It defines detailed responsibilties for the agent as well as how the agent can **interact** with other agents.
-   - The **tools** it will use (name them as Python functions using underscores for multi-word names). For the manager, ensure to NOT include any initial "handle_user_input" tool because the swarm being built asks for input to begin with!
+   - The **tools** it will use (name them as Python functions using underscores for multi-word names. For the manager, ensure to NOT include any initial "handle_user_input" tool because the swarm being built asks for input to begin with! Also donot include any transfer or delegate functions since they are taken care of automatically.
    
 {agent_tools}
 
