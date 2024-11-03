@@ -1,6 +1,6 @@
 # Contributing: Inception Swarm
 
-![Inception Swarm High Level Architecture](assets/Inception Swarm Architecture.png)
+![Inception Swarm High Level Architecture](assets/Inception_Swarm_Architecture.png)
 
 As part of an AI Hackathon at Duke University, we developed an innovative addition to the OpenAI Swarm framework - a new "swarm_builder" that dynamically generates new openai swarms based on user prompts. This project allows users to create simple customizable swarms for specific use cases, providing a streamlined and efficient way to set up multi-agent systems without manual setup for each new task. 
 
