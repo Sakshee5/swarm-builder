@@ -4,7 +4,7 @@ As part of an AI Hackathon at Duke University, we developed an innovative additi
 
 Contributors:
 - Sakshee Patil
-- Siddharth Vinnakota
+- Siddarth Vinnakota
 - Ru Han Wang
 - Roxanne Wang 
 
