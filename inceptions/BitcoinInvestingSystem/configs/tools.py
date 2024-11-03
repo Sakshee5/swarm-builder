@@ -77,29 +77,6 @@ def fetch_recent_bitcoin_news():
         print(f"Error: {e}")
         return []
 
-def delegate_to_price_agent():
-    """
-    Delegates the task to the Price Agent to fetch the latest Bitcoin price and 24-hour price change.
-
-    Returns:
-        dict: Dictionary containing the latest Bitcoin price and 24-hour price change.
-    """
-    price = get_latest_bitcoin_price()
-    price_change_24h = get_24_hour_price_change()
-    return {"latest_price": price, "price_change_24h": price_change_24h}
-
-def delegate_to_news_agent(api_key):
-    """
-    Delegates the task to the News Agent to fetch recent Bitcoin news.
-
-    Args:
-        api_key (str): Your NewsAPI key to authenticate the API request.
-
-    Returns:
-        list: List of recent Bitcoin news summaries.
-    """
-    return fetch_recent_bitcoin_news()
-
 def aggregate_information(price_data, news_data):
     """
     Aggregates the information from the Price and News agents into a comprehensive report.

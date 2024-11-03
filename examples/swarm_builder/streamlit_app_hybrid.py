@@ -76,8 +76,12 @@ if st.session_state.name is None:
 # Main Chat Interface
 else:
     with st.sidebar:
-        st.write("## What Do We Offer?")
-        st.write("Prototyping new ideas efficiently. Validate multiple ideas quickly with our streamlined tool.")
+        st.write("""## What Do We Offer?
+        
+Prototyping new ideas often demands significant time just to establish a foundational structure. With this tool, you can efficiently build and test multiple concepts at a basic level, giving you the freedom to explore and iterate at high speed. Validate 10 ideas in the time it would typically take to fully prototype just one!
+
+You can either talk to out system using the `start` and `stop` recording options or type away!""")
+
 
     st.title("💬 Inception - OpenAI Swarm")
     st.caption("🚀 A swarm to build swarms!")
