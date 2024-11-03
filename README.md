@@ -1,3 +1,77 @@
+# Contributing: Inception Swarm
+
+As part of an AI Hackathon at Duke University, we developed an innovative addition to the OpenAI Swarm framework - a new "swarm_builder" that dynamically generates new openai swarms based on user prompts. This project allows users to create customizable swarms for specific use cases, providing a streamlined and efficient way to set up multi-agent systems without manual setup for each new task. 
+
+Contributors:
+- Sakshee Patil
+- Siddharth Vinnakota
+- Ru Han Wang
+- Roxanne Wang 
+
+## Inspiration - A Swarm to build Swarms !!
+
+Building out an idea often takes considerable time, even to just get the basic structure right. With `swarm_builder`, you can quickly prototype various ideas, gaining an immediate sense of their feasibility. This approach allows you to test around 10 ideas in the time it would typically take to prototype one. While you might still need to add a few tweaks and some custom code to make your swarm fully functional, we believe having a foundational structure ready within minutes is incredibly helpful. This tool offers a starting point that enables rapid iteration and testing, letting you focus more on refining the swarm’s specific functionality than on setting up the initial framework.
+
+## Pitch
+
+With OpenAI’s recent release of the Swarm framework, we saw an opportunity to explore its potential. Our team brainstormed various ideas, ranging from personalized newsletters to study strategy assistants. But then we thought: why limit ourselves to a single use case? Instead, we envisioned a meta-swarm capable of dynamically generating any type of swarm based on natural language input. This concept pushes the boundaries of multi-agent systems by letting users define their problem, with our meta-swarm doing the rest - creating a personalized, efficient swarm of agents tailored for simple tasks.
+
+The novelty of our project lies in the flexibility of the meta-swarm approach. Rather than building agents for one specific problem, we’ve created a system that generates agents to tackle multiple simple problem, allowing for flexibility in multi-agent solutions. 
+
+
+## Overview
+
+The `swarm_builder` is a type of inception swarm under the `examples` folder that automatically builds other swarms based on input requirements, allowing users to specify functionality in natural language and generate ready-to-run swarms. These generated swarms can be found in the `inceptions/` folder and can be run directly with minimal user adjustments, making the `swarm_builder` a versatile tool for creating new applications within the OpenAI Swarm framework.
+
+### Features
+- **User-Prompted Swarm Creation**: Generates swarms based on user input prompts, translating descriptions into executable configurations.
+- **Prebuilt Swarm Examples**: To demonstrate functionality, we've included five sample swarms based on common queries.
+- **Streamlit App Support**: Users can interact with the `swarm_builder` through three Streamlit applications for different input types (text, audio, or hybrid):
+  - **streamlit_app.py**: Accepts text input.
+  - **streamlit_app_audio.py**: Supports audio input.
+  - **streamlit_app_hybrid.py**: Supports both text and audio inputs.
+- **Automated Boilerplate Generation**: The `swarm_builder` provides approximately 90% of the necessary setup for a new swarm, leaving only minimal user customization to tailor the boilerplate such as minor fixes or entering the API keys for various tools.
+
+### Example Swarms Created Using `swarm_builder`
+Below are some sample swarms that demonstrate the capabilities of the `swarm_builder`:
+1. **BitcoinInvestingSystem**: Fetches the latest Bitcoin price, 24-hour price change, and recent news for analysis.
+2. **spotify_playlist_insights**: Retrieves the top 20 songs in a specified genre and provides a playlist summary with audience insights.
+3. **TwitchLiveChecker**: Checks if a given Twitch streamer is currently live, with an option to send a humorous message if they are offline.
+4. **TwitterDiscussionSummarizer**: Searches Twitter for recent discussions on a topic and summarizes the main viewpoints.
+5. **YouTubeVideoPromotion**: Generates promotional content for a YouTube video, including a catchy title and description based on the video transcript.
+
+### Setup and Running the Swarm
+To start using `swarm_builder`, you can run the Streamlit app with one of the following commands:
+
+```bash
+streamlit run examples/swarm_builder/streamlit_app.py
+streamlit run examples/swarm_builder/streamlit_app_audio.py
+streamlit run examples/swarm_builder/streamlit_app_hybrid.py
+```
+
+### Environment Variables
+
+To run `swarm_builder` and the generated inception swarms effectively, you'll need to configure several API keys as environment variables. These keys enable access to third-party services that some swarms rely on for gathering information or performing specific actions. Please ensure the required environment variables are set in your environment:
+
+```plaintext
+OPENAI_API_KEY=
+YOUTUBE_API_KEY=
+NEWS_API_KEY=
+WEB_SEARCH_KEY=
+WEB_SEARCH_ID=
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+TWITCH_CLIENT_ID=
+TWITCH_CLIENT_SECRET=
+```
+
+#### Important Notes
+1. `swarm_builder` Swarm: Some default tools, like web_search, require API keys to function. To use these tools, you’ll need to configure the WEB_SEARCH_KEY AND WEB_SEARCH_ID from Google Custom Search API documentation. Similarly, OPEN_API_KEY is required to run the swarm.
+2. Inception Swarms: The example inception swarms already created and stored in the inceptions/ folder may also require additional keys depending on its functionality. For example, `NEWS_API_KEY` would be needed to run the `BitcoinInvestingSystem`
+3. Custom Swarms: If you create new swarms using swarm_builder that interact with external APIs, ensure you obtain and set up any necessary API keys as per the instructions provided in the generated swarm. The generated swarm will specify any required API keys, and you should add these before running the inception swarm.
+
+
+
 ![Swarm Logo](assets/logo.png)
 
 # Swarm (experimental, educational)
